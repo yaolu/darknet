@@ -12,6 +12,17 @@ def sample(probs):
             return i
     return len(probs)-1
 
+def array_to_image(arr):
+    # need to return old values to avoid python freeing memory
+    arr = arr.transpose(2,0,1)
+    c = arr.shape[0]
+    h = arr.shape[1]
+    w = arr.shape[2]
+    arr = np.ascontiguousarray(arr.flat, dtype=np.float32) / 255.0
+    data = arr.ctypes.data_as(POINTER(c_float))
+    im = IMAGE(w,h,c,data)
+    return im, arr
+
 def c_array(ctype, values):
     arr = (ctype*len(values))()
     arr[:] = values
@@ -122,8 +133,8 @@ def classify(net, meta, im):
     res = sorted(res, key=lambda x: -x[1])
     return res
 
-def detect(net, meta, image, thresh=.5, hier_thresh=.5, nms=.45):
-    im = load_image(image, 0, 0)
+def detect(net, meta, image, thresh=.3, hier_thresh=.5, nms=.45):
+    im = image
     num = c_int(0)
     pnum = pointer(num)
     predict_image(net, im)
